@@ -5,9 +5,9 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: finwise
-      MYSQL_USER: finwise
-      MYSQL_PASSWORD: finwise123
-      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
