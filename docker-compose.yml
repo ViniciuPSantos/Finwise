@@ -1,0 +1,16 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: finwise-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: finwise
+      MYSQL_USER: finwise
+      MYSQL_PASSWORD: finwise123
+      MYSQL_ROOT_PASSWORD: root123
+    ports:
+      - "3307:3306"
+    volumes:
+      - finwise-mysql-data:/var/lib/mysql
+volumes:
+  finwise-mysql-data:
