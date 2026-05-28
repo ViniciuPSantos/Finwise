@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.Map;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/health")
