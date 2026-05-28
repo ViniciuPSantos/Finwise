@@ -14,3 +14,7 @@ target/
 
 #logs
 *.log
+
+#requests de teste local com dados
+register.json
+*.local.json
