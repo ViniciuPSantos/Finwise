@@ -124,4 +124,108 @@ public class TransactionServiceTest {
                 () -> transactionService.create("test@finwise.com", request));
         assertThat(account.getBalance()).isEqualByComparingTo("1000.00");
     }
+
+    private Transaction existingExpense(BigDecimal amount) {
+        Transaction t = new Transaction();
+
+        t.setId(10L);
+        t.setAmount(amount);
+        t.setType(TransactionType.EXPENSE);
+        t.setDescription("almoço");
+        t.setDate(LocalDate.of(2026, 5, 28));
+        t.setAccount(account);
+        t.setCategory(category);
+        return t;
+    }
+
+    @Test
+    void shouldAdjustBalanceWhenUpdatingAmount() {
+        // Arrange: conta tem 1000, já existe uma despesa de 50 (que já tirou 50 quando
+        // foi criada,
+        // mas no teste partimos do saldo 1000 e simulamos só o efeito do update)
+        Transaction existing = existingExpense(new BigDecimal("50.00"));
+
+        TransactionRequest request = new TransactionRequest(
+                new BigDecimal("70.00"), // novo valor
+                TransactionType.EXPENSE, // mesmo tipo
+                "Almoço caro",
+                LocalDate.of(2026, 5, 28),
+                1L, // mesma conta
+                1L);
+
+        when(userRepository.findByEmail("test@finwise.com")).thenReturn(Optional.of(user));
+        when(transactionRepository.findByIdAndAccountUser(10L, user)).thenReturn(Optional.of(existing));
+        when(accountRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(account));
+        when(categoryRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(category));
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        transactionService.update("test@finwise.com", 10L, request);
+
+        // Assert: reverte a despesa antiga (+50) e aplica a nova (-70) sobre o saldo
+        // 1000
+        // 1000 + 50 - 70 = 980
+        assertThat(account.getBalance()).isEqualByComparingTo("980.00");
+    }
+
+    @Test
+    void shouldAdjustBalanceWhenChangingType() {
+        Transaction existing = existingExpense(new BigDecimal("50.00"));
+
+        TransactionRequest request = new TransactionRequest(
+                new BigDecimal("50.00"), // mesmo valor
+                TransactionType.INCOME, // tipo MUDOU: era EXPENSE, vira INCOME
+                "Estorno",
+                LocalDate.of(2026, 5, 28),
+                1L,
+                1L);
+
+        when(userRepository.findByEmail("test@finwise.com")).thenReturn(Optional.of(user));
+        when(transactionRepository.findByIdAndAccountUser(10L, user)).thenReturn(Optional.of(existing));
+        when(accountRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(account));
+        when(categoryRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(category));
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        transactionService.update("test@finwise.com", 10L, request);
+
+        // reverte despesa antiga de 50 (+50) e aplica receita nova de 50 (+50)
+        // 1000 + 50 + 50 = 1100
+        assertThat(account.getBalance()).isEqualByComparingTo("1100.00");
+    }
+
+    @Test
+    void shouldMoveBalanceBetweenAccountsWhenChangingAccount() {
+        // segunda conta, com saldo próprio
+        Account newAccount = new Account();
+        newAccount.setId(2L);
+        newAccount.setName("Carteira");
+        newAccount.setBalance(new BigDecimal("500.00"));
+        newAccount.setUser(user);
+
+        Transaction existing = existingExpense(new BigDecimal("50.00")); // está na account (id 1)
+
+        TransactionRequest request = new TransactionRequest(
+                new BigDecimal("50.00"),
+                TransactionType.EXPENSE,
+                "Almoço",
+                LocalDate.of(2026, 5, 28),
+                2L, // conta MUDOU: vai para a conta 2
+                1L);
+
+        when(userRepository.findByEmail("test@finwise.com")).thenReturn(Optional.of(user));
+        when(transactionRepository.findByIdAndAccountUser(10L, user)).thenReturn(Optional.of(existing));
+        when(accountRepository.findByIdAndUser(2L, user)).thenReturn(Optional.of(newAccount));
+        when(categoryRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(category));
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        transactionService.update("test@finwise.com", 10L, request);
+
+        // conta ANTIGA recebe a devolução da despesa: 1000 + 50 = 1050
+        assertThat(account.getBalance()).isEqualByComparingTo("1050.00");
+        // conta NOVA recebe a aplicação da despesa: 500 - 50 = 450
+        assertThat(newAccount.getBalance()).isEqualByComparingTo("450.00");
+    }
 }
