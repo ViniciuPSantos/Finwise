@@ -4,6 +4,7 @@ import com.finwise.finwise.auth.dto.AuthResponse;
 import com.finwise.finwise.auth.dto.RegisterRequest;
 import com.finwise.finwise.auth.dto.UserResponse;
 import com.finwise.finwise.auth.dto.LoginRequest;
+import com.finwise.finwise.auth.dto.RefreshRequest;
 import com.finwise.finwise.shared.exception.InvalidCredentialsException;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -50,5 +51,17 @@ public class AuthService {
         RefreshToken refreshToken = refreshTokenService.create(user);
 
         return AuthResponse.of(accessToken, refreshToken.getToken());
+    }
+
+    public AuthResponse refresh(RefreshRequest request){
+        RefreshToken refreshToken = refreshTokenService.validate(request.refreshToken());
+
+        String newAccessToken = jwtService.generateToken(refreshToken.getUser().getEmail());
+
+        return AuthResponse.of(newAccessToken, refreshToken.getToken());
+    }
+
+    public void logout(RefreshRequest request){
+        refreshTokenService.revoke(request.refreshToken());
     }
 }

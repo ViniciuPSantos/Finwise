@@ -2,7 +2,7 @@ package com.finwise.finwise.auth;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
+import com.finwise.finwise.shared.exception.InvalidRefreshTokenException;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -23,5 +23,27 @@ public class RefreshTokenService {
         token.setExpiresAt(Instant.now().plusMillis(refreshExpirationMs));
 
         return repo.save(token);
+    }
+
+    public RefreshToken validate(String token){
+        RefreshToken refreshToken = repo.findByToken(token)
+                .orElseThrow(InvalidRefreshTokenException::new);
+
+        if(refreshToken.isRevoked()){
+            throw new InvalidRefreshTokenException();
+        }
+
+        if(refreshToken.getExpiresAt().isBefore(Instant.now())){
+            throw new InvalidRefreshTokenException();
+        }
+
+        return refreshToken;
+    }
+
+    public void revoke(String token){
+        repo.findByToken(token).ifPresent(refreshToken -> {
+            refreshToken.setRevoked(true);
+            repo.save(refreshToken);
+        });
     }
 }
