@@ -140,9 +140,6 @@ public class TransactionServiceTest {
 
     @Test
     void shouldAdjustBalanceWhenUpdatingAmount() {
-        // Arrange: conta tem 1000, já existe uma despesa de 50 (que já tirou 50 quando
-        // foi criada,
-        // mas no teste partimos do saldo 1000 e simulamos só o efeito do update)
         Transaction existing = existingExpense(new BigDecimal("50.00"));
 
         TransactionRequest request = new TransactionRequest(
@@ -175,7 +172,7 @@ public class TransactionServiceTest {
 
         TransactionRequest request = new TransactionRequest(
                 new BigDecimal("50.00"), // mesmo valor
-                TransactionType.INCOME, // tipo MUDOU: era EXPENSE, vira INCOME
+                TransactionType.INCOME,
                 "Estorno",
                 LocalDate.of(2026, 5, 28),
                 1L,
@@ -204,8 +201,7 @@ public class TransactionServiceTest {
         newAccount.setBalance(new BigDecimal("500.00"));
         newAccount.setUser(user);
 
-        Transaction existing = existingExpense(new BigDecimal("50.00")); // está na account (id 1)
-
+        Transaction existing = existingExpense(new BigDecimal("50.00"));
         TransactionRequest request = new TransactionRequest(
                 new BigDecimal("50.00"),
                 TransactionType.EXPENSE,
@@ -227,5 +223,18 @@ public class TransactionServiceTest {
         assertThat(account.getBalance()).isEqualByComparingTo("1050.00");
         // conta NOVA recebe a aplicação da despesa: 500 - 50 = 450
         assertThat(newAccount.getBalance()).isEqualByComparingTo("450.00");
+    }
+
+    @Test
+    void shouldRevertBalanceWhenDeleting() {
+        Transaction existing = existingExpense(new BigDecimal("50.00"));
+
+        when(userRepository.findByEmail("test@finwise.com")).thenReturn(Optional.of(user));
+        when(transactionRepository.findByIdAndAccountUser(10L, user)).thenReturn(Optional.of(existing));
+
+        transactionService.delete("test@finwise.com", 10L);
+
+        // deletar uma despesa de 50 devolve +50 ao saldo: 1000 + 50 = 1050
+        assertThat(account.getBalance()).isEqualByComparingTo("1050.00");
     }
 }
