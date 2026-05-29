@@ -2,6 +2,7 @@ package com.finwise.finwise.account;
 
 import com.finwise.finwise.account.dto.AccountRequest;
 import com.finwise.finwise.account.dto.AccountResponse;
+import com.finwise.finwise.shared.exception.AccountNotFoundException;
 import com.finwise.finwise.auth.User;
 import com.finwise.finwise.auth.UserRepository;
 import com.finwise.finwise.shared.exception.InvalidCredentialsException;
@@ -19,9 +20,9 @@ public class AccountService {
         this.userRepo = userRepo;
     }
 
-    public AccountResponse create(String email, AccountRequest request){
+    public AccountResponse create(String email, AccountRequest request) {
         User user = userRepo.findByEmail(email)
-            .orElseThrow(InvalidCredentialsException::new);
+                .orElseThrow(InvalidCredentialsException::new);
 
         Account account = new Account();
         account.setName(request.name());
@@ -33,12 +34,41 @@ public class AccountService {
         return AccountResponse.from(saved);
     }
 
-    public List<AccountResponse> listByUser(String email){
+    public List<AccountResponse> listByUser(String email) {
         User user = userRepo.findByEmail(email)
-            .orElseThrow(InvalidCredentialsException::new);
-        
+                .orElseThrow(InvalidCredentialsException::new);
+
         return repo.findByUser(user).stream()
-            .map(AccountResponse::from)
-            .toList();
+                .map(AccountResponse::from)
+                .toList();
+    }
+
+    private Account getOwnedAccount(String email, Long accountId) {
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(InvalidCredentialsException::new);
+
+        return repo.findByIdAndUser(accountId, user)
+                .orElseThrow(AccountNotFoundException::new);
+    }
+
+    public AccountResponse getById(String email, Long accountId){
+        Account account = getOwnedAccount(email, accountId);
+        return AccountResponse.from(account);
+    }
+
+    public AccountResponse update(String email, Long accountId, AccountRequest request){
+        Account account = getOwnedAccount(email, accountId);
+
+        account.setName(request.name());
+        account.setType(request.type());
+        account.setBalance(request.balance());
+
+        Account saved = repo.save(account);
+        return AccountResponse.from(saved);
+    }
+
+    public void delete(String email, Long accountId){
+        Account account = getOwnedAccount(email, accountId);
+        repo.delete(account);
     }
 }
