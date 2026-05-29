@@ -7,6 +7,10 @@ import com.finwise.finwise.auth.UserRepository;
 import com.finwise.finwise.category.Category;
 import com.finwise.finwise.category.CategoryRepository;
 import com.finwise.finwise.shared.exception.AccountNotFoundException;
+import com.finwise.finwise.shared.dto.PageResponse;
+import com.finwise.finwise.transaction.TransactionType;
+import org.springframework.data.domain.Pageable;
+import java.time.LocalDate;
 import com.finwise.finwise.shared.exception.CategoryNotFoundException;
 import com.finwise.finwise.shared.exception.InvalidCredentialsException;
 import com.finwise.finwise.transaction.dto.TransactionRequest;
@@ -14,6 +18,7 @@ import com.finwise.finwise.transaction.dto.TransactionResponse;
 import com.finwise.finwise.shared.exception.TransactionNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -61,13 +66,22 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public List<TransactionResponse> listByUser(String email) {
+    public PageResponse<TransactionResponse> list(
+            String email,
+            Long accountId,
+            Long categoryId,
+            TransactionType type,
+            LocalDate startDate,
+            LocalDate endDate,
+            Pageable pageable) {
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        return transactionRepository.findByAccountUserOrderByDateDesc(user).stream()
-                .map(TransactionResponse::from)
-                .toList();
+        Page<Transaction> page = transactionRepository.findFiltered(
+                user, accountId, categoryId, type, startDate, endDate, pageable);
+
+        return PageResponse.from(page, TransactionResponse::from);
     }
 
     private void applyToBalance(Account account, TransactionType type, BigDecimal amount) {
@@ -98,12 +112,12 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public TransactionResponse getById(String email, Long id){
+    public TransactionResponse getById(String email, Long id) {
         return TransactionResponse.from(getOwnedTransaction(email, id));
     }
 
     @Transactional
-    public void delete(String email, Long id){
+    public void delete(String email, Long id) {
         Transaction transaction = getOwnedTransaction(email, id);
         Account account = transaction.getAccount();
 
@@ -114,17 +128,17 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionResponse update(String email, Long id, TransactionRequest request){
+    public TransactionResponse update(String email, Long id, TransactionRequest request) {
         Transaction transaction = getOwnedTransaction(email, id);
         User user = userRepository.findByEmail(email)
-            .orElseThrow(InvalidCredentialsException::new);
+                .orElseThrow(InvalidCredentialsException::new);
 
         Category category = categoryRepository.findByIdAndUser(request.categoryId(), user)
-            .orElseThrow(CategoryNotFoundException::new);
+                .orElseThrow(CategoryNotFoundException::new);
 
         Account oldAccount = transaction.getAccount();
         Account newAccount = accountRepository.findByIdAndUser(request.accountId(), user)
-            .orElseThrow(AccountNotFoundException::new);
+                .orElseThrow(AccountNotFoundException::new);
 
         revertFromBalance(oldAccount, transaction.getType(), transaction.getAmount());
 
