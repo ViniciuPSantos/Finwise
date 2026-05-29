@@ -2,6 +2,8 @@ package com.finwise.finwise.dashboard;
 
 import com.finwise.finwise.dashboard.dto.CategorySpendingResponse;
 import com.finwise.finwise.dashboard.dto.IncomeExpenseSummaryResponse;
+import com.finwise.finwise.dashboard.dto.MonthlyEvolutionResponse;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -35,5 +37,13 @@ public class DashboardController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         return dashboardService.getIncomeExpenseSummary(email, startDate, endDate);
+    }
+
+    @GetMapping("/monthly-evolution")
+    public List<MonthlyEvolutionResponse> monthlyEvolution(
+            @AuthenticationPrincipal String email,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return dashboardService.getMonthlyEvolution(email, startDate, endDate);
     }
 }
