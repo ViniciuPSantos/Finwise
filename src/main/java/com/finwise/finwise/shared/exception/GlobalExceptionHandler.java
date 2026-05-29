@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler{
+public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleIllegalArgumentException(IllegalArgumentException ex) {
@@ -21,10 +21,15 @@ public class GlobalExceptionHandler{
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> details = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(fieldError ->
-            details.put(fieldError.getField(), fieldError.getDefaultMessage())
-        );
+        ex.getBindingResult().getFieldErrors()
+                .forEach(fieldError -> details.put(fieldError.getField(), fieldError.getDefaultMessage()));
         ApiError error = ApiError.of(HttpStatus.BAD_REQUEST.value(), "Validation failed", details);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidCredentials(InvalidCredentialsException ex) {
+        ApiError error = ApiError.of(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 }
