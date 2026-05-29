@@ -25,12 +25,35 @@ public class TransactionController {
             @AuthenticationPrincipal String email,
             @Valid @RequestBody TransactionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(transactionService.create(email, request));
+                .body(transactionService.create(email, request));
     }
 
     @GetMapping
     public ResponseEntity<List<TransactionResponse>> list(
             @AuthenticationPrincipal String email) {
         return ResponseEntity.ok(transactionService.listByUser(email));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TransactionResponse> getById(
+            @AuthenticationPrincipal String email,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(transactionService.getById(email, id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TransactionResponse> update(
+            @AuthenticationPrincipal String email,
+            @PathVariable Long id,
+            @Valid @RequestBody TransactionRequest request) {
+        return ResponseEntity.ok(transactionService.update(email, id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal String email,
+            @PathVariable Long id) {
+        transactionService.delete(email, id);
+        return ResponseEntity.noContent().build();
     }
 }
