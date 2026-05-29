@@ -1,4 +1,4 @@
-package com.finwise.finwise.account;
+package com.finwise.finwise.category;
 
 import com.finwise.finwise.auth.User;
 import com.finwise.finwise.shared.BaseEntity;
@@ -7,15 +7,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-
 @Entity
-@Table(name = "accounts")
+@Table(name = "categories")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Account extends BaseEntity {
+public class Category extends BaseEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,13 +20,6 @@ public class Account extends BaseEntity {
 
     @Column(nullable = false)
     private String name;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private AccountType type;
-
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal balance;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
