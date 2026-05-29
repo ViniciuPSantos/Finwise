@@ -8,7 +8,6 @@ import com.finwise.finwise.category.Category;
 import com.finwise.finwise.category.CategoryRepository;
 import com.finwise.finwise.shared.exception.AccountNotFoundException;
 import com.finwise.finwise.shared.dto.PageResponse;
-import com.finwise.finwise.transaction.TransactionType;
 import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import com.finwise.finwise.shared.exception.CategoryNotFoundException;
@@ -21,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Service
 public class TransactionService {

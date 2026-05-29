@@ -1,6 +1,7 @@
 package com.finwise.finwise.dashboard;
 
 import com.finwise.finwise.dashboard.dto.CategorySpendingResponse;
+import com.finwise.finwise.dashboard.dto.IncomeExpenseSummaryResponse;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -21,11 +22,18 @@ public class DashboardController {
     @GetMapping("/spending-by-category")
     public List<CategorySpendingResponse> spendingByCategory(
             @AuthenticationPrincipal String email,
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         return dashboardService.getSpendingByCategory(email, startDate, endDate);
+    }
+
+    @GetMapping("/income-expense-summary")
+    public IncomeExpenseSummaryResponse incomeExpenseSummary(
+            @AuthenticationPrincipal String email,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        return dashboardService.getIncomeExpenseSummary(email, startDate, endDate);
     }
 }
