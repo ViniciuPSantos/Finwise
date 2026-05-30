@@ -5,6 +5,7 @@ import com.finwise.finwise.auth.dto.RegisterRequest;
 import com.finwise.finwise.auth.dto.UserResponse;
 import com.finwise.finwise.auth.dto.LoginRequest;
 import com.finwise.finwise.auth.dto.RefreshRequest;
+import com.finwise.finwise.shared.exception.DuplicateEmailException;
 import com.finwise.finwise.shared.exception.InvalidCredentialsException;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,7 +28,7 @@ public class AuthService {
 
     public UserResponse register(RegisterRequest request) {
         if (repo.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already registered");
+            throw new DuplicateEmailException("Email already registered");
         }
 
         User user = new User();

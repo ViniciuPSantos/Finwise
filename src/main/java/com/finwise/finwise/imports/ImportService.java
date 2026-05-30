@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -37,11 +38,11 @@ public class ImportService {
     private final UserRepository userRepository;
 
     public ImportService(CsvParser csvParser,
-                         TransactionService transactionService,
-                         CategoryService categoryService,
-                         AccountRepository accountRepository,
-                         CategoryRepository categoryRepository,
-                         UserRepository userRepository) {
+            TransactionService transactionService,
+            CategoryService categoryService,
+            AccountRepository accountRepository,
+            CategoryRepository categoryRepository,
+            UserRepository userRepository) {
         this.csvParser = csvParser;
         this.transactionService = transactionService;
         this.categoryService = categoryService;
@@ -64,7 +65,7 @@ public class ImportService {
             try {
                 BigDecimal amount = new BigDecimal(row.amount());
                 TransactionType type = TransactionType.valueOf(row.type().toUpperCase());
-                LocalDate date = LocalDate.parse(row.date());
+                LocalDate date = parseDate(row.date());
 
                 Account account = accountRepository
                         .findByNameAndUser(row.account(), user)
@@ -113,5 +114,15 @@ public class ImportService {
                     createdCategories.add(name);
                     return created.id();
                 });
+    }
+
+    private static final DateTimeFormatter BR_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    private LocalDate parseDate(String raw) {
+        try {
+            return LocalDate.parse(raw);
+        } catch (DateTimeParseException e) {
+            return LocalDate.parse(raw, BR_DATE);
+        }
     }
 }

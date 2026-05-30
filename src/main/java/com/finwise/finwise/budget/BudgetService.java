@@ -11,7 +11,6 @@ import com.finwise.finwise.dashboard.dto.CategorySpentProjection;
 import com.finwise.finwise.shared.exception.CategoryNotFoundException;
 import com.finwise.finwise.shared.exception.DuplicateBudgetException;
 import com.finwise.finwise.shared.exception.InvalidCredentialsException;
-import com.finwise.finwise.transaction.Transaction;
 import com.finwise.finwise.transaction.TransactionRepository;
 import com.finwise.finwise.shared.exception.BudgetNotFoundException;
 import org.springframework.stereotype.Service;

@@ -6,6 +6,6 @@ public record ImportResultResponse(
     int totalRows,
     int imported,
     int skipped,
-    List<ImportErrorDetails> errors,
+    List<ImportErrorDetail> errors,
     List<String> createdCategories
 ){}
