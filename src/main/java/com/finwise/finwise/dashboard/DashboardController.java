@@ -1,6 +1,7 @@
 package com.finwise.finwise.dashboard;
 
 import com.finwise.finwise.dashboard.dto.CategorySpendingResponse;
+import com.finwise.finwise.dashboard.dto.DashboardOverviewResponse;
 import com.finwise.finwise.dashboard.dto.IncomeExpenseSummaryResponse;
 import com.finwise.finwise.dashboard.dto.MonthlyEvolutionResponse;
 
@@ -45,5 +46,13 @@ public class DashboardController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return dashboardService.getMonthlyEvolution(email, startDate, endDate);
+    }
+
+    @GetMapping("/overview")
+    public DashboardOverviewResponse overview(
+            @AuthenticationPrincipal String email,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        return dashboardService.getOverview(email, year, month);
     }
 }

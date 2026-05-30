@@ -2,7 +2,11 @@ package com.finwise.finwise.dashboard;
 
 import com.finwise.finwise.auth.User;
 import com.finwise.finwise.auth.UserRepository;
+import com.finwise.finwise.budget.Budget;
+import com.finwise.finwise.budget.BudgetService;
+import com.finwise.finwise.budget.dto.BudgetStatusResponse;
 import com.finwise.finwise.dashboard.dto.CategorySpendingResponse;
+import com.finwise.finwise.dashboard.dto.DashboardOverviewResponse;
 import com.finwise.finwise.dashboard.dto.IncomeExpenseProjection;
 import com.finwise.finwise.dashboard.dto.IncomeExpenseSummaryResponse;
 import com.finwise.finwise.dashboard.dto.MonthlyEvolutionProjection;
@@ -20,10 +24,12 @@ import java.util.List;
 public class DashboardService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+    private final BudgetService budgetService;
 
-    public DashboardService(TransactionRepository transactionRepository, UserRepository userRepository) {
+    public DashboardService(TransactionRepository transactionRepository, UserRepository userRepository, BudgetService budgetService) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
+        this.budgetService = budgetService;
     }
 
     public List<CategorySpendingResponse> getSpendingByCategory(String email, LocalDate startDate, LocalDate endDate) {
@@ -85,5 +91,27 @@ public class DashboardService {
         }
 
         return new LocalDate[] { startDate, endDate };
+    }
+
+    public DashboardOverviewResponse getOverview(String email, Integer year, Integer month){
+        if(year == null || month == null){
+            LocalDate now = LocalDate.now();
+            year = now.getYear();
+            month = now.getMonthValue();
+        }
+
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        IncomeExpenseSummaryResponse summary = 
+            getIncomeExpenseSummary(email, startDate, endDate);
+
+        List<CategorySpendingResponse> spending =
+            getSpendingByCategory(email, startDate, endDate);
+
+        List<BudgetStatusResponse> budgetStatus = 
+            budgetService.getBudgetStatus(email, year, month);
+
+        return new DashboardOverviewResponse(year, month, summary, spending, budgetStatus);
     }
 }
