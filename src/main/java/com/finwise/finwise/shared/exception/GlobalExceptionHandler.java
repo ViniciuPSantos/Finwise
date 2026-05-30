@@ -44,4 +44,12 @@ public class GlobalExceptionHandler {
         ApiError error = ApiError.of(HttpStatus.NOT_FOUND.value(), ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+
+    @ExceptionHandler(DuplicateBudgetException.class)
+    public ResponseEntity<ApiError> handleDuplicateBudget(DuplicateBudgetException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiError.of(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+    
 }
