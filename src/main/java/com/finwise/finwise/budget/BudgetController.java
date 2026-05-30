@@ -2,6 +2,8 @@ package com.finwise.finwise.budget;
 
 import com.finwise.finwise.budget.dto.BudgetRequest;
 import com.finwise.finwise.budget.dto.BudgetResponse;
+import com.finwise.finwise.budget.dto.BudgetStatusResponse;
+
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -53,4 +55,13 @@ public class BudgetController {
             @PathVariable Long id) {
         budgetService.delete(email, id);
     }
+
+    @GetMapping("/status")
+    public List<BudgetStatusResponse> status(
+            @AuthenticationPrincipal String email,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        return budgetService.getBudgetStatus(email, year, month);
+    }
+
 }
