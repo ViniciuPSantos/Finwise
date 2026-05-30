@@ -2,7 +2,6 @@ package com.finwise.finwise.dashboard;
 
 import com.finwise.finwise.auth.User;
 import com.finwise.finwise.auth.UserRepository;
-import com.finwise.finwise.budget.Budget;
 import com.finwise.finwise.budget.BudgetService;
 import com.finwise.finwise.budget.dto.BudgetStatusResponse;
 import com.finwise.finwise.dashboard.dto.CategorySpendingResponse;
