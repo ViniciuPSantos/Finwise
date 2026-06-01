@@ -3,7 +3,7 @@
 Aplicação **full stack** para controle de finanças pessoais. O backend é uma **API REST em Java + Spring Boot**, com persistência em **MySQL** e ambiente containerizado em **Docker**. O frontend, em **React.js + TypeScript**, consome a API e está publicado em produção.
 
 🔗 **Aplicação em produção:** https://finwise-five-livid.vercel.app/
-📦 **Repositório do frontend:** <!-- adicione aqui o link do repositório do front, ex: https://github.com/ViniciuPSantos/Finwise-Front -->
+📦 **Repositório do frontend:** https://github.com/ViniciuPSantos/Finwise-Front
 
 ---
 
