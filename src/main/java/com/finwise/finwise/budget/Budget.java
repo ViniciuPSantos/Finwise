@@ -7,12 +7,14 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "budgets", uniqueConstraints = @UniqueConstraint(name = "uk_budget_user_category_period", columnNames = {
         "user_id", "category_id", "budget_year", "budget_month" }))
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @NoArgsConstructor

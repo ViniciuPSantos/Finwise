@@ -71,8 +71,8 @@ public class TransactionServiceTest {
                 1L);
 
         when(userRepository.findByEmail("test@finwise.com")).thenReturn(Optional.of(user));
-        when(accountRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(account));
-        when(categoryRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(category));
+        when(accountRepository.findByIdAndUserAndDeletedAtIsNull(1L, user)).thenReturn(Optional.of(account));
+        when(categoryRepository.findByIdAndUserAndDeletedAtIsNull(1L, user)).thenReturn(Optional.of(category));
         when(transactionRepository.save(any(Transaction.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -94,8 +94,8 @@ public class TransactionServiceTest {
                 1L);
 
         when(userRepository.findByEmail("test@finwise.com")).thenReturn(Optional.of(user));
-        when(accountRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(account));
-        when(categoryRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(category));
+        when(accountRepository.findByIdAndUserAndDeletedAtIsNull(1L, user)).thenReturn(Optional.of(account));
+        when(categoryRepository.findByIdAndUserAndDeletedAtIsNull(1L, user)).thenReturn(Optional.of(category));
         when(transactionRepository.save(any(Transaction.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -116,7 +116,7 @@ public class TransactionServiceTest {
                 1L);
 
         when(userRepository.findByEmail("test@finwise.com")).thenReturn(Optional.of(user));
-        when(accountRepository.findByIdAndUser(99L, user)).thenReturn(Optional.empty());
+        when(accountRepository.findByIdAndUserAndDeletedAtIsNull(99L, user)).thenReturn(Optional.empty());
 
         // espera a exceção, e o saldo NÃO deve mudar
         org.junit.jupiter.api.Assertions.assertThrows(
@@ -152,8 +152,8 @@ public class TransactionServiceTest {
 
         when(userRepository.findByEmail("test@finwise.com")).thenReturn(Optional.of(user));
         when(transactionRepository.findByIdAndAccountUser(10L, user)).thenReturn(Optional.of(existing));
-        when(accountRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(account));
-        when(categoryRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(category));
+        when(accountRepository.findByIdAndUserAndDeletedAtIsNull(1L, user)).thenReturn(Optional.of(account));
+        when(categoryRepository.findByIdAndUserAndDeletedAtIsNull(1L, user)).thenReturn(Optional.of(category));
         when(transactionRepository.save(any(Transaction.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -180,8 +180,8 @@ public class TransactionServiceTest {
 
         when(userRepository.findByEmail("test@finwise.com")).thenReturn(Optional.of(user));
         when(transactionRepository.findByIdAndAccountUser(10L, user)).thenReturn(Optional.of(existing));
-        when(accountRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(account));
-        when(categoryRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(category));
+        when(accountRepository.findByIdAndUserAndDeletedAtIsNull(1L, user)).thenReturn(Optional.of(account));
+        when(categoryRepository.findByIdAndUserAndDeletedAtIsNull(1L, user)).thenReturn(Optional.of(category));
         when(transactionRepository.save(any(Transaction.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -212,8 +212,8 @@ public class TransactionServiceTest {
 
         when(userRepository.findByEmail("test@finwise.com")).thenReturn(Optional.of(user));
         when(transactionRepository.findByIdAndAccountUser(10L, user)).thenReturn(Optional.of(existing));
-        when(accountRepository.findByIdAndUser(2L, user)).thenReturn(Optional.of(newAccount));
-        when(categoryRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(category));
+        when(accountRepository.findByIdAndUserAndDeletedAtIsNull(2L, user)).thenReturn(Optional.of(newAccount));
+        when(categoryRepository.findByIdAndUserAndDeletedAtIsNull(1L, user)).thenReturn(Optional.of(category));
         when(transactionRepository.save(any(Transaction.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 

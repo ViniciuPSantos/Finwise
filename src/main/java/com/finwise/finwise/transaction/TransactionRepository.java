@@ -24,10 +24,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             SELECT t FROM Transaction t
             WHERE t.account.user = :user
             AND (:accountId IS NULL OR t.account.id = :accountId)
-            AND(:categoryId IS NULL OR t.category.id = :categoryId)
+            AND (:categoryId IS NULL OR t.category.id = :categoryId)
             AND (:type IS NULL OR t.type = :type)
             AND (:startDate IS NULL OR t.date >= :startDate)
             AND (:endDate IS NULL OR t.date <= :endDate)
+            AND (:search IS NULL OR LOWER(t.description) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
     Page<Transaction> findFiltered(
             @Param("user") User user,
@@ -36,7 +37,28 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("type") TransactionType type,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
+            @Param("search") String search,
             Pageable pageable);
+
+    @Query("""
+            SELECT t FROM Transaction t
+            WHERE t.account.user = :user
+            AND (:accountId IS NULL OR t.account.id = :accountId)
+            AND (:categoryId IS NULL OR t.category.id = :categoryId)
+            AND (:type IS NULL OR t.type = :type)
+            AND (:startDate IS NULL OR t.date >= :startDate)
+            AND (:endDate IS NULL OR t.date <= :endDate)
+            AND (:search IS NULL OR LOWER(t.description) LIKE LOWER(CONCAT('%', :search, '%')))
+            ORDER BY t.date DESC
+            """)
+    List<Transaction> findAllFiltered(
+            @Param("user") User user,
+            @Param("accountId") Long accountId,
+            @Param("categoryId") Long categoryId,
+            @Param("type") TransactionType type,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("search") String search);
 
     @Query("""
             SELECT new com.finwise.finwise.dashboard.dto.CategorySpendingResponse(

@@ -1,0 +1,4 @@
+ALTER TABLE accounts ADD COLUMN deleted_at DATETIME(6) NULL;
+ALTER TABLE transactions ADD COLUMN deleted_at DATETIME(6) NULL;
+ALTER TABLE categories ADD COLUMN deleted_at DATETIME(6) NULL;
+ALTER TABLE budgets ADD COLUMN deleted_at DATETIME(6) NULL;

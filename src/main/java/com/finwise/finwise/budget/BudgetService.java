@@ -45,7 +45,7 @@ public class BudgetService {
         User user = resolveUser(email);
 
         Category category = categoryRepository
-                .findByIdAndUser(request.categoryId(), user)
+                .findByIdAndUserAndDeletedAtIsNull(request.categoryId(), user)
                 .orElseThrow(CategoryNotFoundException::new);
 
         budgetRepository
@@ -93,7 +93,8 @@ public class BudgetService {
     public void delete(String email, Long id) {
         User user = resolveUser(email);
         Budget budget = getOwnedBudget(id, user);
-        budgetRepository.delete(budget);
+        budget.setDeletedAt(java.time.Instant.now());
+        budgetRepository.save(budget);
     }
 
     private User resolveUser(String email){

@@ -41,7 +41,7 @@ public class AccountService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        return repo.findByUser(user).stream()
+        return repo.findByUserAndDeletedAtIsNull(user).stream()
                 .map(AccountResponse::from)
                 .toList();
     }
@@ -50,7 +50,7 @@ public class AccountService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        return repo.findByIdAndUser(accountId, user)
+        return repo.findByIdAndUserAndDeletedAtIsNull(accountId, user)
                 .orElseThrow(AccountNotFoundException::new);
     }
 
@@ -75,6 +75,7 @@ public class AccountService {
     @Transactional
     public void delete(String email, Long accountId){
         Account account = getOwnedAccount(email, accountId);
-        repo.delete(account);
+        account.setDeletedAt(java.time.Instant.now());
+        repo.save(account);
     }
 }

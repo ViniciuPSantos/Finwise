@@ -13,8 +13,15 @@ public class BaseEntity {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column
+    private Instant deletedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
+    }
+
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

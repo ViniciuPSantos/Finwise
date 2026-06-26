@@ -38,7 +38,7 @@ public class CategoryService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        return categoryRepository.findByUser(user).stream()
+        return categoryRepository.findByUserAndDeletedAtIsNull(user).stream()
                 .map(CategoryResponse::from)
                 .toList();
     }
@@ -57,14 +57,16 @@ public class CategoryService {
 
     @Transactional
     public void delete(String email, Long id) {
-        categoryRepository.delete(getOwnedCategory(email, id));
+        Category category = getOwnedCategory(email, id);
+        category.setDeletedAt(java.time.Instant.now());
+        categoryRepository.save(category);
     }
 
     private Category getOwnedCategory(String email, Long id) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        return categoryRepository.findByIdAndUser(id, user)
+        return categoryRepository.findByIdAndUserAndDeletedAtIsNull(id, user)
                 .orElseThrow(CategoryNotFoundException::new);
     }
 }

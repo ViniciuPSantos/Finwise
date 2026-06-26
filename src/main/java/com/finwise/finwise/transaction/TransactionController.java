@@ -7,8 +7,10 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
-
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -36,15 +38,16 @@ public class TransactionController {
     @GetMapping
     public ResponseEntity<PageResponse<TransactionResponse>> list(
             @AuthenticationPrincipal String email,
-        @RequestParam(required = false) Long accountId,
-        @RequestParam(required = false) Long categoryId,
-        @RequestParam(required = false) TransactionType type,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-        @PageableDefault(size = 20, sort = "date") Pageable pageable) {
-        
-        PageResponse<TransactionResponse> result = transactionService.list(email, accountId, categoryId, type, startDate, endDate, pageable);
-        return ResponseEntity.ok(result);
+            @RequestParam(required = false) Long accountId,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) TransactionType type,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 20, sort = "date") Pageable pageable) {
+
+        return ResponseEntity.ok(
+                transactionService.list(email, accountId, categoryId, type, startDate, endDate, search, pageable));
     }
 
     @GetMapping("/{id}")
@@ -60,6 +63,24 @@ public class TransactionController {
             @PathVariable Long id,
             @Valid @RequestBody TransactionRequest request) {
         return ResponseEntity.ok(transactionService.update(email, id, request));
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export(
+            @AuthenticationPrincipal String email,
+            @RequestParam(required = false) Long accountId,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) TransactionType type,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String search) {
+
+        byte[] csv = transactionService.export(email, accountId, categoryId, type, startDate, endDate, search);
+        String filename = "transactions_" + LocalDate.now() + ".csv";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv"));
+        headers.setContentDisposition(ContentDisposition.attachment().filename(filename).build());
+        return ResponseEntity.ok().headers(headers).body(csv);
     }
 
     @DeleteMapping("/{id}")

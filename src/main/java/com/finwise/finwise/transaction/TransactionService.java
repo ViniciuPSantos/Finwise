@@ -6,9 +6,16 @@ import com.finwise.finwise.auth.User;
 import com.finwise.finwise.auth.UserRepository;
 import com.finwise.finwise.category.Category;
 import com.finwise.finwise.category.CategoryRepository;
+import com.finwise.finwise.account.AccountType;
 import com.finwise.finwise.shared.exception.AccountNotFoundException;
+import com.finwise.finwise.shared.exception.InsufficientBalanceException;
 import com.finwise.finwise.shared.dto.PageResponse;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.springframework.data.domain.Pageable;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.LocalDate;
 import com.finwise.finwise.shared.exception.CategoryNotFoundException;
 import com.finwise.finwise.shared.exception.InvalidCredentialsException;
@@ -20,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class TransactionService {
@@ -41,10 +49,10 @@ public class TransactionService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        Account account = accountRepository.findByIdAndUser(request.accountId(), user)
+        Account account = accountRepository.findByIdAndUserAndDeletedAtIsNull(request.accountId(), user)
                 .orElseThrow(AccountNotFoundException::new);
 
-        Category category = categoryRepository.findByIdAndUser(request.categoryId(), user)
+        Category category = categoryRepository.findByIdAndUserAndDeletedAtIsNull(request.categoryId(), user)
                 .orElseThrow(CategoryNotFoundException::new);
 
         Transaction transaction = new Transaction();
@@ -71,13 +79,14 @@ public class TransactionService {
             TransactionType type,
             LocalDate startDate,
             LocalDate endDate,
+            String search,
             Pageable pageable) {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
         Page<Transaction> page = transactionRepository.findFiltered(
-                user, accountId, categoryId, type, startDate, endDate, pageable);
+                user, accountId, categoryId, type, startDate, endDate, search, pageable);
 
         return PageResponse.from(page, TransactionResponse::from);
     }
@@ -88,6 +97,12 @@ public class TransactionService {
         if (type == TransactionType.INCOME) {
             account.setBalance(current.add(amount));
         } else {
+            boolean blocksNegative = account.getType() == AccountType.CASH
+                    || account.getType() == AccountType.CHECKING
+                    || account.getType() == AccountType.SAVINGS;
+            if (blocksNegative && current.subtract(amount).compareTo(BigDecimal.ZERO) < 0) {
+                throw new InsufficientBalanceException();
+            }
             account.setBalance(current.subtract(amount));
         }
     }
@@ -124,8 +139,34 @@ public class TransactionService {
 
         revertFromBalance(account, transaction.getType(), transaction.getAmount());
 
-        transactionRepository.delete(transaction);
+        transaction.setDeletedAt(java.time.Instant.now());
+        transactionRepository.save(transaction);
         accountRepository.save(account);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] export(String email, Long accountId, Long categoryId, TransactionType type,
+            LocalDate startDate, LocalDate endDate, String search) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(InvalidCredentialsException::new);
+
+        List<Transaction> transactions = transactionRepository.findAllFiltered(
+                user, accountId, categoryId, type, startDate, endDate, search);
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+                CSVPrinter printer = new CSVPrinter(new PrintWriter(out),
+                        CSVFormat.DEFAULT.builder()
+                                .setHeader("id", "date", "type", "amount", "description", "account", "category")
+                                .build())) {
+            for (Transaction t : transactions) {
+                printer.printRecord(t.getId(), t.getDate(), t.getType(), t.getAmount(),
+                        t.getDescription(), t.getAccount().getName(), t.getCategory().getName());
+            }
+            printer.flush();
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate CSV export", e);
+        }
     }
 
     @Transactional
@@ -133,11 +174,11 @@ public class TransactionService {
         Transaction transaction = getOwnedTransaction(email, id);
         User user = resolveUser(email);
 
-        Category category = categoryRepository.findByIdAndUser(request.categoryId(), user)
+        Category category = categoryRepository.findByIdAndUserAndDeletedAtIsNull(request.categoryId(), user)
                 .orElseThrow(CategoryNotFoundException::new);
 
         Account oldAccount = transaction.getAccount();
-        Account newAccount = accountRepository.findByIdAndUser(request.accountId(), user)
+        Account newAccount = accountRepository.findByIdAndUserAndDeletedAtIsNull(request.accountId(), user)
                 .orElseThrow(AccountNotFoundException::new);
 
         revertFromBalance(oldAccount, transaction.getType(), transaction.getAmount());

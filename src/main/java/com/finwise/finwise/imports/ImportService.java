@@ -68,7 +68,7 @@ public class ImportService {
                 LocalDate date = parseDate(row.date());
 
                 Account account = accountRepository
-                        .findByNameAndUser(row.account(), user)
+                        .findByNameAndUserAndDeletedAtIsNull(row.account(), user)
                         .orElseThrow(() -> new IllegalArgumentException(
                                 "Account '" + row.account() + "' not found"));
 
@@ -107,7 +107,7 @@ public class ImportService {
     private Long resolveOrCreateCategory(
             String email, User user, String name, Set<String> createdCategories) {
 
-        return categoryRepository.findByNameAndUser(name, user)
+        return categoryRepository.findByNameAndUserAndDeletedAtIsNull(name, user)
                 .map(Category::getId)
                 .orElseGet(() -> {
                     var created = categoryService.create(email, new CategoryRequest(name));
