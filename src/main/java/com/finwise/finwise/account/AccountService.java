@@ -7,6 +7,7 @@ import com.finwise.finwise.auth.User;
 import com.finwise.finwise.auth.UserRepository;
 import com.finwise.finwise.shared.exception.InvalidCredentialsException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class AccountService {
         this.userRepo = userRepo;
     }
 
+    @Transactional
     public AccountResponse create(String email, AccountRequest request) {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
@@ -34,6 +36,7 @@ public class AccountService {
         return AccountResponse.from(saved);
     }
 
+    @Transactional(readOnly = true)
     public List<AccountResponse> listByUser(String email) {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
@@ -51,11 +54,13 @@ public class AccountService {
                 .orElseThrow(AccountNotFoundException::new);
     }
 
+    @Transactional(readOnly = true)
     public AccountResponse getById(String email, Long accountId){
         Account account = getOwnedAccount(email, accountId);
         return AccountResponse.from(account);
     }
 
+    @Transactional
     public AccountResponse update(String email, Long accountId, AccountRequest request){
         Account account = getOwnedAccount(email, accountId);
 
@@ -67,6 +72,7 @@ public class AccountService {
         return AccountResponse.from(saved);
     }
 
+    @Transactional
     public void delete(String email, Long accountId){
         Account account = getOwnedAccount(email, accountId);
         repo.delete(account);

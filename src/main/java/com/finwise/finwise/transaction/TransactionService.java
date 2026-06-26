@@ -101,10 +101,13 @@ public class TransactionService {
         }
     }
 
-    private Transaction getOwnedTransaction(String email, Long id) {
-        User user = userRepository.findByEmail(email)
+    private User resolveUser(String email) {
+        return userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
+    }
 
+    private Transaction getOwnedTransaction(String email, Long id) {
+        User user = resolveUser(email);
         return transactionRepository.findByIdAndAccountUser(id, user)
                 .orElseThrow(TransactionNotFoundException::new);
     }
@@ -128,8 +131,7 @@ public class TransactionService {
     @Transactional
     public TransactionResponse update(String email, Long id, TransactionRequest request) {
         Transaction transaction = getOwnedTransaction(email, id);
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(InvalidCredentialsException::new);
+        User user = resolveUser(email);
 
         Category category = categoryRepository.findByIdAndUser(request.categoryId(), user)
                 .orElseThrow(CategoryNotFoundException::new);

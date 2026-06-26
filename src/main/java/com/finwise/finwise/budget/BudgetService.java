@@ -14,6 +14,7 @@ import com.finwise.finwise.shared.exception.InvalidCredentialsException;
 import com.finwise.finwise.transaction.TransactionRepository;
 import com.finwise.finwise.shared.exception.BudgetNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -39,6 +40,7 @@ public class BudgetService {
         this.transactionRepository = transactionRepository;
     }
 
+    @Transactional
     public BudgetResponse create(String email, BudgetRequest request) {
         User user = resolveUser(email);
 
@@ -62,6 +64,7 @@ public class BudgetService {
         return BudgetResponse.from(budgetRepository.save(budget));
     }
 
+    @Transactional(readOnly = true)
     public List<BudgetResponse> list(String email) {
         User user = resolveUser(email);
         return budgetRepository.findByUser(user).stream()
@@ -69,12 +72,14 @@ public class BudgetService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public BudgetResponse getById(String email, Long id) {
         User user = resolveUser(email);
         Budget budget = getOwnedBudget(id, user);
         return BudgetResponse.from(budget);
     }
 
+    @Transactional
     public BudgetResponse update(String email, Long id, BudgetRequest request) {
         User user = resolveUser(email);
         Budget budget = getOwnedBudget(id, user);
@@ -84,6 +89,7 @@ public class BudgetService {
         return BudgetResponse.from(budgetRepository.save(budget));
     }
 
+    @Transactional
     public void delete(String email, Long id) {
         User user = resolveUser(email);
         Budget budget = getOwnedBudget(id, user);
@@ -100,6 +106,7 @@ public class BudgetService {
             .orElseThrow(BudgetNotFoundException::new);
     }
 
+    @Transactional(readOnly = true)
     public List<BudgetStatusResponse> getBudgetStatus(String email, Integer year, Integer month){
         User user = resolveUser(email);
 

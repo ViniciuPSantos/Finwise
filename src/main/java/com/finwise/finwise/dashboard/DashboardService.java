@@ -81,7 +81,7 @@ public class DashboardService {
                 .toList();
     }
 
-    public LocalDate[] resolvePeriod(LocalDate startDate, LocalDate endDate) {
+    private LocalDate[] resolvePeriod(LocalDate startDate, LocalDate endDate) {
         if (startDate == null) {
             startDate = LocalDate.now().withDayOfMonth(1);
         }

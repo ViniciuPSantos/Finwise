@@ -7,6 +7,7 @@ import com.finwise.finwise.category.dto.CategoryResponse;
 import com.finwise.finwise.shared.exception.CategoryNotFoundException;
 import com.finwise.finwise.shared.exception.InvalidCredentialsException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class CategoryService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public CategoryResponse create(String email, CategoryRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
@@ -31,6 +33,7 @@ public class CategoryService {
         return CategoryResponse.from(categoryRepository.save(category));
     }
 
+    @Transactional(readOnly = true)
     public List<CategoryResponse> listByUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
@@ -40,16 +43,19 @@ public class CategoryService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public CategoryResponse getById(String email, Long id) {
         return CategoryResponse.from(getOwnedCategory(email, id));
     }
 
+    @Transactional
     public CategoryResponse update(String email, Long id, CategoryRequest request) {
         Category category = getOwnedCategory(email, id);
         category.setName(request.name());
         return CategoryResponse.from(categoryRepository.save(category));
     }
 
+    @Transactional
     public void delete(String email, Long id) {
         categoryRepository.delete(getOwnedCategory(email, id));
     }
