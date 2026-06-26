@@ -5,6 +5,7 @@ import com.finwise.finwise.auth.UserRepository;
 import com.finwise.finwise.budget.BudgetService;
 import com.finwise.finwise.budget.dto.BudgetStatusResponse;
 import com.finwise.finwise.dashboard.dto.CategorySpendingResponse;
+import com.finwise.finwise.dashboard.dto.ComparisonResponse;
 import com.finwise.finwise.dashboard.dto.DashboardOverviewResponse;
 import com.finwise.finwise.dashboard.dto.IncomeExpenseProjection;
 import com.finwise.finwise.dashboard.dto.IncomeExpenseSummaryResponse;
@@ -16,6 +17,7 @@ import com.finwise.finwise.transaction.TransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -112,5 +114,36 @@ public class DashboardService {
             budgetService.getBudgetStatus(email, year, month);
 
         return new DashboardOverviewResponse(year, month, summary, spending, budgetStatus);
+    }
+
+    public ComparisonResponse getComparison(String email, Integer year, Integer month) {
+        if (year == null || month == null) {
+            LocalDate now = LocalDate.now();
+            year = now.getYear();
+            month = now.getMonthValue();
+        }
+
+        LocalDate currentStart = LocalDate.of(year, month, 1);
+        LocalDate currentEnd = currentStart.withDayOfMonth(currentStart.lengthOfMonth());
+
+        LocalDate previousStart = currentStart.minusMonths(1);
+        LocalDate previousEnd = previousStart.withDayOfMonth(previousStart.lengthOfMonth());
+
+        IncomeExpenseSummaryResponse current = getIncomeExpenseSummary(email, currentStart, currentEnd);
+        IncomeExpenseSummaryResponse previous = getIncomeExpenseSummary(email, previousStart, previousEnd);
+
+        BigDecimal incomeChange = percentChange(previous.totalIncome(), current.totalIncome());
+        BigDecimal expenseChange = percentChange(previous.totalExpense(), current.totalExpense());
+
+        return new ComparisonResponse(year, month, current, previous, incomeChange, expenseChange);
+    }
+
+    private BigDecimal percentChange(BigDecimal before, BigDecimal after) {
+        if (before == null || before.compareTo(BigDecimal.ZERO) == 0) {
+            return null;
+        }
+        return after.subtract(before)
+                .divide(before, 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
     }
 }

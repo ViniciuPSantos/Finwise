@@ -1,6 +1,7 @@
 package com.finwise.finwise.dashboard;
 
 import com.finwise.finwise.dashboard.dto.CategorySpendingResponse;
+import com.finwise.finwise.dashboard.dto.ComparisonResponse;
 import com.finwise.finwise.dashboard.dto.DashboardOverviewResponse;
 import com.finwise.finwise.dashboard.dto.IncomeExpenseSummaryResponse;
 import com.finwise.finwise.dashboard.dto.MonthlyEvolutionResponse;
@@ -54,5 +55,13 @@ public class DashboardController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month) {
         return dashboardService.getOverview(email, year, month);
+    }
+
+    @GetMapping("/comparison")
+    public ComparisonResponse comparison(
+            @AuthenticationPrincipal String email,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        return dashboardService.getComparison(email, year, month);
     }
 }
