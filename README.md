@@ -1,13 +1,13 @@
 # 💰 Finwise — API de Gestão Financeira Pessoal
 
-Aplicação **full stack** para controle de finanças pessoais. O backend é uma **API REST em Java + Spring Boot**, com persistência em **MySQL** e ambiente containerizado em **Docker**. O frontend, em **React.js + TypeScript**, consome a API e está publicado em produção.
+API REST para controle de finanças pessoais. Gerencia contas, transações, categorias, orçamentos, transferências e transações recorrentes, com dashboard analítico e importação/exportação CSV.
 
-🔗 **Aplicação em produção:** https://finwise-five-livid.vercel.app/
+🔗 **Frontend em produção:** https://finwise-five-livid.vercel.app/  
 📦 **Repositório do frontend:** https://github.com/ViniciuPSantos/Finwise-Front
 
 ---
 
-## 📸 Demonstração
+## Demonstração
 
 ![LandPage do Finwise](https://github.com/user-attachments/assets/3ac15155-3f60-4642-a335-1c9b611af5cd)
 
@@ -21,124 +21,185 @@ Aplicação **full stack** para controle de finanças pessoais. O backend é uma
 
 ![CategoriesPage do Finwise](https://github.com/user-attachments/assets/677c7388-fe38-4781-a62d-e2d3d96960d7)
 
-![ImportPage](https://github.com/user-attachments/assets/2da0304e-1936-4a57-b1dd-e0614f852b9f)
+---
+
+## Stack
+
+| Camada | Tecnologia |
+|--------|-----------|
+| Linguagem | Java 21 |
+| Framework | Spring Boot 3.5.14 |
+| Segurança | Spring Security + JWT (jjwt 0.12.6), stateless, refresh token |
+| Persistência | Spring Data JPA + Flyway + MySQL 8.4 |
+| Build | Maven (Maven Wrapper incluído) |
+| CSV | Apache Commons CSV 1.11.0 |
+| Documentação | SpringDoc OpenAPI 2.8.5 |
+| Infraestrutura | Docker + Docker Compose (MySQL local) |
+| Deploy | Railway (backend + banco) / Vercel (frontend) |
 
 ---
 
-## 🚀 Funcionalidades
+## Funcionalidades
 
-- ✅ Cadastro e autenticação de usuários
-- ✅ Registro de receitas e despesas
-- ✅ Categorização de transações
-- ✅ Consulta de saldo e histórico de movimentações
-- ✅ Edição e exclusão de lançamentos
-- E muito mais!
-
----
-
-## 🛠 Tecnologias
-
-**Backend**
-- Java 21
-- Spring Boot
-- Spring Web (API REST)
-- Spring Data JPA
-- Maven
-
-**Banco de Dados**
-- MySQL 8.4
-
-**Infraestrutura / Deploy**
-- Docker e Docker Compose
-- Railway (backend + banco de dados)
-- Vercel (frontend)
-
-**Frontend**
-- React.js
-- TypeScript
+- Autenticação com JWT (access token + refresh token) e rate limiting (5 falhas → bloqueio de 15 min)
+- Cadastro cria automaticamente 8 categorias padrão (Alimentação, Transporte, Saúde, Moradia, Lazer, Educação, Salário, Outros)
+- CRUD completo de contas, categorias, transações e orçamentos com **soft delete**
+- Validação de saldo negativo em contas CASH, CHECKING e SAVINGS
+- Transferências entre contas com reversão automática de saldo ao deletar
+- Transações recorrentes (DAILY / WEEKLY / MONTHLY / YEARLY) com execução automática à meia-noite
+- Filtro de transações por descrição (`?search=`), tipo, conta, categoria e período
+- Exportação de transações em CSV (`GET /api/transactions/export`)
+- Importação de transações via CSV (`POST /api/imports/csv`)
+- Dashboard: visão geral, evolução mensal, gastos por categoria, resumo receita/despesa e comparativo mês anterior
+- Swagger habilitado apenas no perfil `dev`
 
 ---
 
-## 📂 Estrutura do projeto
+## Como rodar localmente
 
-```
-Finwise/
- ├── .mvn/wrapper/        # Maven Wrapper
- ├── src/                 # Código-fonte da API (Java / Spring Boot)
- ├── .env.example         # Modelo de variáveis de ambiente
- ├── docker-compose.yml   # Configuração do container MySQL
- ├── pom.xml              # Dependências e build (Maven)
- └── mvnw / mvnw.cmd      # Scripts do Maven Wrapper
-```
-
----
-
-## ⚙️ Como rodar localmente
-
-### Pré-requisitos
-- [Java 21](https://www.oracle.com/java/technologies/downloads/)
-- [Docker](https://www.docker.com/) e Docker Compose
-- [Git](https://git-scm.com/)
-
-### 1. Clone o repositório
+**Pré-requisitos:** Java 21, Docker, Git
 
 ```bash
+# 1. Clone
 git clone https://github.com/ViniciuPSantos/Finwise.git
 cd Finwise
-```
 
-### 2. Configure as variáveis de ambiente
-
-Copie o arquivo de exemplo e preencha com seus valores:
-
-```bash
+# 2. Configure as variáveis de ambiente
 cp .env.example .env
-```
+# Edite .env com seus valores
 
-O arquivo `.env` deve conter:
-
-```env
-DB_USER=seu_usuario
-DB_PASSWORD=sua_senha
-DB_ROOT_PASSWORD=sua_senha_root
-```
-
-### 3. Suba o banco de dados com Docker
-
-```bash
+# 3. Suba o banco de dados
 docker compose up -d
+
+# 4. Rode a aplicação (perfil dev ativa Swagger + seed de dados)
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
-Isso inicia um container MySQL 8.4 com o banco `finwise` (exposto na porta `3307` do host).
-
-### 4. Rode a aplicação
-
-```bash
-./mvnw spring-boot:run
-```
-
-A API estará disponível em:
-
-```
-http://localhost:8080
-```
+- API: `http://localhost:8080/api`
+- Swagger: `http://localhost:8080/swagger-ui.html` (somente com perfil `dev`)
 
 ---
 
-## 📌 Endpoints principais
+## Variáveis de ambiente
 
+| Variável | Padrão | Obrigatória |
+|----------|--------|------------|
+| `DB_USER` | — | Sim |
+| `DB_PASSWORD` | — | Sim |
+| `DB_ROOT_PASSWORD` | — | Sim (Docker) |
+| `JWT_SECRET` | — | Sim |
+| `DB_HOST` | `localhost` | Não |
+| `DB_PORT` | `3307` | Não |
+| `DB_NAME` | `finwise` | Não |
+| `JWT_EXPIRATION` | `3600000` (1h) | Não |
+| `JWT_REFRESH_EXPIRATION` | `604800000` (7d) | Não |
+| `PORT` | `8080` | Não |
+| `SPRING_PROFILES_ACTIVE` | — | Não (`dev` ativa Swagger e seed) |
+| `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Não |
+
+> **Atenção:** `SPRING_PROFILES_ACTIVE=dev` insere dados de seed e habilita o Swagger — não usar em produção.
+
+---
+
+## Endpoints
+
+### Auth (público)
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| POST   | `/api/auth/register` | Cadastra um novo usuário |
-| POST   | `/api/auth/login`    | Autentica e retorna o token |
-| GET    | `/api/transactions`  | Lista as transações do usuário |
-| POST   | `/api/transactions`  | Cria uma nova transação |
-| PUT    | `/api/transactions/{id}` | Atualiza uma transação |
-| DELETE | `/api/transactions/{id}` | Remove uma transação |
+| POST | `/api/auth/register` | Cadastra usuário + cria categorias padrão |
+| POST | `/api/auth/login` | Autentica e retorna access + refresh token |
+| POST | `/api/auth/refresh` | Renova o access token |
+| POST | `/api/auth/logout` | Revoga o refresh token |
+
+### Usuário
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/me` | Retorna dados do usuário autenticado |
+
+### Contas
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/api/accounts` | Cria conta (CASH, CHECKING, SAVINGS, CREDIT_CARD, INVESTMENT) |
+| GET | `/api/accounts` | Lista contas ativas |
+| GET | `/api/accounts/{id}` | Detalhe da conta |
+| PUT | `/api/accounts/{id}` | Atualiza conta |
+| DELETE | `/api/accounts/{id}` | Soft delete |
+
+### Categorias
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/api/categories` | Cria categoria |
+| GET | `/api/categories` | Lista categorias ativas |
+| GET | `/api/categories/{id}` | Detalhe |
+| PUT | `/api/categories/{id}` | Atualiza |
+| DELETE | `/api/categories/{id}` | Soft delete |
+
+### Transações
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/api/transactions` | Cria transação (ajusta saldo da conta) |
+| GET | `/api/transactions` | Lista com filtros e paginação (`?search=`, `?type=`, `?accountId=`, `?categoryId=`, `?startDate=`, `?endDate=`, `?page=`, `?size=`) |
+| GET | `/api/transactions/{id}` | Detalhe |
+| PUT | `/api/transactions/{id}` | Atualiza (reajusta saldo) |
+| DELETE | `/api/transactions/{id}` | Soft delete (reverte saldo) |
+| GET | `/api/transactions/export` | Exporta CSV com os mesmos filtros do list |
+
+### Transferências
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/api/transfers` | Transfere entre contas do usuário |
+| GET | `/api/transfers` | Lista transferências |
+| GET | `/api/transfers/{id}` | Detalhe |
+| DELETE | `/api/transfers/{id}` | Cancela e reverte saldos |
+
+### Orçamentos
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/api/budgets` | Cria orçamento mensal por categoria |
+| GET | `/api/budgets` | Lista orçamentos |
+| GET | `/api/budgets/{id}` | Detalhe |
+| GET | `/api/budgets/status` | Status de consumo dos orçamentos no mês atual |
+| PUT | `/api/budgets/{id}` | Atualiza |
+| DELETE | `/api/budgets/{id}` | Soft delete |
+
+### Transações recorrentes
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/api/recurring-transactions` | Cria (DAILY / WEEKLY / MONTHLY / YEARLY) |
+| GET | `/api/recurring-transactions` | Lista |
+| GET | `/api/recurring-transactions/{id}` | Detalhe |
+| PUT | `/api/recurring-transactions/{id}` | Atualiza |
+| DELETE | `/api/recurring-transactions/{id}` | Remove |
+
+> Execução automática diária à meia-noite via `@Scheduled`.
+
+### Dashboard
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/dashboard/overview` | Saldo total + resumo do mês |
+| GET | `/api/dashboard/income-expense-summary` | Total de receitas e despesas (`?year=&month=`) |
+| GET | `/api/dashboard/spending-by-category` | Gastos agrupados por categoria |
+| GET | `/api/dashboard/monthly-evolution` | Evolução mensal de receitas e despesas |
+| GET | `/api/dashboard/comparison` | Comparativo mês atual vs anterior com % de variação (`?year=&month=`) |
+
+### Importação
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/api/imports/csv` | Importa transações via arquivo CSV (multipart) |
 
 ---
 
-## 👨‍💻 Autor
+## Testes
+
+```bash
+./mvnw test
+```
+
+Testes unitários da camada de serviço com JUnit 5 + Mockito. H2 configurado para testes de integração.
+
+---
+
+## Autor
 
 **Vinícius de Paula Santos**
 
@@ -148,6 +209,6 @@ http://localhost:8080
 
 ---
 
-## 📄 Licença
+## Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
